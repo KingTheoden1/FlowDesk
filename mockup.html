@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FlowDesk — Interactive Mockup</title>
+  <style>
+    /* ============================================
+       DESIGN SYSTEM
+    ============================================ */
+    :root {
+      --navy:           #0F172A;
+      --navy-mid:       #1E293B;
+      --navy-dark:      #020617;
+      --white:          #FFFFFF;
+      --bg:             #F8FAFC;
+      --bg-alt:         #F1F5F9;
+      --accent:         #6366F1;
+      --accent-dark:    #4F46E5;
+      --accent-light:   #EEF2FF;
+      --text:           #1E293B;
+      --text-muted:     #64748B;
+      --border:         #E2E8F0;
+      --border-dark:    #CBD5E1;
+
+      --todo:           #94A3B8;
+      --inprogress:     #3B82F6;
+      --inreview:       #F59E0B;
+      --done:           #10B981;
+
+      --p-low:          #94A3B8;
+      --p-medium:       #F59E0B;
+      --p-high:         #EF4444;
+      --p-critical:     #7C3AED;
+
+      --sidebar-w:      240px;
+      --topbar-h:       52px;
+      --nav-h:          56px;
+    }
+
+    /* ============================================
+       RESET
+    ============================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #CBD5E1;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; font-size: inherit; }
+    ul { list-style: none; }
+    textarea { font-family: inherit; }
+
+    /* ============================================
+       VIEWPORT TOGGLE BAR
+       Fixed at top, always full browser width.
+       Simulates different screen sizes by
+       constraining .app-frame width.
+    ============================================ */
+    .topbar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: var(--topbar-h);
+      background: var(--navy-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      z-index: 9999;
+      border-bottom: 1px solid #1E293B;
+    }
+    .topbar__label {
+      color: #475569;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-right: 6px;
+    }
+    .vp-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 13px;
+      border-radius: 6px;
+      color: #64748B;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background .15s, color .15s;
+    }
+    .vp-btn:hover { background: #1E293B; color: #CBD5E1; }
+    .vp-btn.active { background: var(--accent); color: #fff; }
+    .vp-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .bp-pill {
+      margin-left: 12px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: #1E293B;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+
+    /* ============================================
+       PREVIEW WRAPPER
+       Centers and constrains the app frame.
+       Viewport classes control max-width.
+    ============================================ */
+    .preview {
+      margin-top: var(--topbar-h);
+      min-height: calc(100vh - var(--topbar-h));
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px;
+    }
+
+    /* App frame is the simulated browser window */
+    .app-frame {
+      width: 100%;
+      max-width: 1920px;
+      height: calc(100vh - var(--topbar-h) - 40px);
+      background: var(--bg);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,.25);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Tablet: constrain to 768px */
+    .preview.vp-tablet .app-frame { max-width: 768px; }
+
+    /* Mobile: constrain to 375px */
+    .preview.vp-mobile .app-frame { max-width: 375px; }
+
+    /* ============================================
+       AUTH SCREEN
+       Full-screen, shown before login.
+    ============================================ */
+    .auth-screen {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--navy) 0%, #1E293B 100%);
+      padding: 32px 20px;
+      overflow-y: auto;
+    }
+    .auth-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.35);
+    }
+    .vp-mobile .auth-card { padding: 28px 20px; }
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .brand-name { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -.02em; }
+    .auth-tabs {
+      display: flex;
+      background: var(--bg-alt);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 7px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-align: center;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .auth-tab.active {
+      background: #fff;
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .field input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:hover { border-color: var(--accent); }
+    .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+    .field input::placeholder { color: var(--text-muted); }
+    .auth-hint { text-align: center; margin-top: 14px; font-size: 12px; color: var(--text-muted); }
+
+    /* ============================================
+       APP SHELL
+       Sidebar + main content, shown after login.
+    ============================================ */
+    .app-shell {
+      display: none; /* toggled by JS */
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .app-shell.visible { display: flex; }
+
+    /* ============================================
+       SIDEBAR
+    ============================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform .25s ease;
+      z-index: 50;
+      overflow-y: auto;
+    }
+
+    /* On mobile viewport: sidebar slides in as overlay */
+    .vp-mobile .sidebar {
+      position: absolute;
+      inset: 0 auto 0 0;
+      height: 100%;
+      transform: translateX(-100%);
+    }
+    .vp-mobile .sidebar.open { transform: translateX(0); }
+
+    /* Dim overlay behind open mobile sidebar */
+    .sidebar-veil {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 49;
+    }
+    .vp-mobile .sidebar.open ~ .sidebar-veil { display: block; }
+
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .sidebar-logo .brand-icon { width: 30px; height: 30px; font-size: 13px; }
+    .sidebar-logo .brand-name { color: #fff; font-size: 15px; }
+    .sidebar-section {
+      padding: 10px 20px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 20px;
+      color: #64748B;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background .12s, color .12s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.05); color: #CBD5E1; }
+    .nav-item.active { background: rgba(99,102,241,.13); color: #fff; border-left-color: var(--accent); }
+    .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .65; }
+    .nav-item.active svg { opacity: 1; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 14px 20px;
+      border-top: 1px solid rgba(255,255,255,.07);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .avatar {
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .av-md { width: 32px; height: 32px; font-size: 12px; }
+    .av-sm { width: 24px; height: 24px; font-size: 9px; border: 2px solid #fff; }
+    .av-xs { width: 20px; height: 20px; font-size: 8px; }
+    .sidebar-user-name { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-user-role { font-size: 11px; color: #475569; }
+
+    /* ============================================
+       MAIN CONTENT
+    ============================================ */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* Top nav bar */
+    .topnav {
+      height: var(--nav-h);
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .hamburger {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 34px; height: 34px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      transition: background .12s;
+      flex-shrink: 0;
+    }
+    .hamburger:hover { background: var(--bg-alt); }
+    .vp-mobile .hamburger { display: flex; }
+    .topnav-title { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topnav-search {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      width: 200px;
+      transition: border-color .15s;
+      flex-shrink: 0;
+    }
+    .topnav-search:hover { border-color: var(--border-dark); }
+    .vp-mobile .topnav-search { display: none; }
+    .vp-tablet .topnav-search { width: 160px; }
+    .role-pill {
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      flex-shrink: 0;
+    }
+    .role-admin { background: #FEF3C7; color: #92400E; }
+    .role-member { background: var(--accent-light); color: var(--accent-dark); }
+    .vp-mobile .role-pill { display: none; }
+
+    /* Page content scroll area */
+    .page-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 32px;
+    }
+    .vp-tablet .page-wrap { padding: 22px 24px; }
+    .vp-mobile .page-wrap { padding: 16px; }
+
+    /* Pages — hidden by default, shown by JS */
+    .page { display: none; }
+    .page.active { display: block; animation: fadein .18s ease; }
+    @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Page header */
+    .ph { margin-bottom: 24px; }
+    .ph-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .ph-title { font-size: 21px; font-weight: 700; color: var(--text); letter-spacing: -.02em; }
+    .ph-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+    /* ============================================
+       BUTTONS
+    ============================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background .13s, box-shadow .13s, transform .13s, border-color .13s;
+      flex-shrink: 0;
+    }
+    .btn svg { width: 13px; height: 13px; }
+    .btn-sm { padding: 5px 11px; font-size: 12px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(99,102,241,.35); }
+    .btn-ghost { background: #fff; color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { background: var(--bg-alt); border-color: var(--border-dark); }
+    .btn-danger { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+    .btn-danger:hover { background: #DC2626; color: #fff; border-color: #DC2626; }
+
+    /* ============================================
+       BADGES
+    ============================================ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .badge-todo     { background: #F1F5F9; color: var(--todo); }
+    .badge-progress { background: #EFF6FF; color: var(--inprogress); }
+    .badge-review   { background: #FFFBEB; color: var(--inreview); }
+    .badge-done     { background: #ECFDF5; color: var(--done); }
+    .badge-high     { background: #FEF2F2; color: var(--p-high); }
+    .badge-critical { background: #F5F3FF; color: var(--p-critical); }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .dot-todo     { background: var(--todo); }
+    .dot-progress { background: var(--inprogress); }
+    .dot-review   { background: var(--inreview); }
+    .dot-done     { background: var(--done); }
+    .dot-low      { background: var(--p-low); }
+    .dot-medium   { background: var(--p-medium); }
+    .dot-high     { background: var(--p-high); }
+    .dot-critical { background: var(--p-critical); }
+
+    /* ============================================
+       DASHBOARD PAGE
+    ============================================ */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .vp-tablet .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .vp-mobile .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      transition: box-shadow .15s, transform .15s;
+    }
+    .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); transform: translateY(-2px); }
+    .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+    .stat-value { font-size: 30px; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+    .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+    .sv-accent   { color: var(--accent); }
+    .sv-todo     { color: var(--todo); }
+    .sv-progress { color: var(--inprogress); }
+    .sv-review   { color: var(--inreview); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .vp-mobile .two-col { grid-template-columns: 1fr; }
+    .vp-tablet .two-col { grid-template-columns: 1fr; }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .panel-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 16px; }
+
+    /* Priority breakdown rows */
+    .prow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--bg-alt);
+    }
+    .prow:last-child { border-bottom: none; }
+    .prow:hover { background: var(--bg); margin: 0 -8px; padding: 8px; border-radius: 6px; }
+    .prow-label { flex: 1; font-size: 13px; font-weight: 500; }
+    .prow-bar { flex: 2; height: 5px; background: var(--bg-alt); border-radius: 3px; overflow: hidden; }
+    .prow-fill { height: 100%; border-radius: 3px; }
+    .prow-count { font-size: 16px; font-weight: 700; width: 24px; text-align: right; }
+
+    /* Activity list */
+    .activity-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--bg-alt);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item:hover { background: var(--bg); margin: 0 -8px; padding: 10px 8px; border-radius: 6px; }
+    .act-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .act-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+    .act-text strong { font-weight: 600; }
+    .act-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ============================================
+       PROJECTS PAGE
+    ============================================ */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .vp-tablet .projects-grid { grid-template-columns: repeat(2, 1fr); }
+    .vp-mobile .projects-grid { grid-template-columns: 1fr; }
+    .proj-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: box-shadow .15s, transform .15s, border-color .15s;
+    }
+    .proj-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.1); transform: translateY(-2px); border-color: var(--accent); }
+    .proj-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    .proj-name { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+    .proj-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.55; }
+    .proj-footer { display: flex; align-items: center; justify-content: space-between; }
+    .proj-stats { font-size: 11px; color: var(--text-muted); display: flex; gap: 10px; }
+    .member-stack { display: flex; }
+    .member-stack .av-sm { margin-left: -6px; }
+    .member-stack .av-sm:first-child { margin-left: 0; }
+
+    .proj-new {
+      background: var(--bg-alt);
+      border-style: dashed;
+    }
+    .proj-new-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 148px;
+      color: var(--text-muted);
+      gap: 8px;
+    }
+    .proj-new-inner span { font-size: 13px; font-weight: 500; }
+
+    /* ============================================
+       TASK BOARD (Kanban)
+    ============================================ */
+    .board {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+      align-items: flex-start;
+    }
+    .vp-mobile .board { flex-direction: column; overflow-x: unset; }
+    .col {
+      flex: 0 0 255px;
+      min-width: 255px;
+      background: var(--bg-alt);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .vp-mobile .col { flex: none; min-width: unset; width: 100%; }
+    .col-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .col-title { font-size: 13px; font-weight: 600; }
+    .col-count {
+      margin-left: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+    .task-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 13px;
+      margin-bottom: 9px;
+      cursor: pointer;
+      transition: box-shadow .14s, transform .14s;
+    }
+    .task-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.1); transform: translateY(-1px); }
+    .task-card:last-of-type { margin-bottom: 0; }
+    .tc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+    .tc-id { font-size: 10px; color: var(--text-muted); font-family: 'SF Mono', 'Fira Code', monospace; }
+    .tc-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 9px; }
+    .tc-foot { display: flex; align-items: center; justify-content: space-between; }
+    .tc-due { font-size: 11px; color: var(--text-muted); }
+    .tc-due.overdue { color: var(--p-high); }
+    .task-card.faded { opacity: .6; }
+    .task-card.faded .tc-title { text-decoration: line-through; color: var(--text-muted); }
+    .add-col-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      padding: 7px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 6px;
+      transition: background .12s, color .12s;
+    }
+    .add-col-btn:hover { background: #fff; color: var(--accent); }
+
+    /* ============================================
+       TASK DETAIL
+    ============================================ */
+    .detail-layout {
+      display: grid;
+      grid-template-columns: 1fr 310px;
+      gap: 24px;
+      align-items: start;
+    }
+    .vp-tablet .detail-layout,
+    .vp-mobile .detail-layout { grid-template-columns: 1fr; }
+    .detail-id { font-size: 12px; color: var(--text-muted); font-family: monospace; margin-bottom: 6px; }
+    .detail-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -.02em;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+    .detail-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .detail-desc {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.75;
+      margin-bottom: 28px;
+    }
+
+    /* Sidebar metadata panel */
+    .meta-panel {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .meta-panel-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 12px;
+    }
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--bg-alt);
+      font-size: 13px;
+    }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-key { color: var(--text-muted); }
+    .meta-val { font-weight: 500; display: flex; align-items: center; gap: 6px; }
+
+    /* Comments */
+    .comments-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .comments-count { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+    .comment {
+      display: flex;
+      gap: 11px;
+      margin-bottom: 18px;
+    }
+    .comment-body { flex: 1; }
+    .comment-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
+    .comment-author { font-size: 13px; font-weight: 600; }
+    .comment-time { font-size: 11px; color: var(--text-muted); }
+    .comment-text {
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.6;
+      background: var(--bg-alt);
+      border-radius: 0 8px 8px 8px;
+      padding: 10px 13px;
+    }
+    .comment-input-row {
+      display: flex;
+      gap: 11px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      align-items: flex-start;
+    }
+    .comment-input {
+      flex: 1;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 13px;
+      font-size: 13px;
+      color: var(--text-muted);
+      resize: none;
+      height: 70px;
+      transition: border-color .15s, background .15s;
+      outline: none;
+    }
+    .comment-input:hover { border-color: var(--accent); background: #fff; }
+    .comment-submit-row { display: flex; justify-content: flex-end; margin-top: 9px; }
+
+    /* ============================================
+       SCROLLBARS
+    ============================================ */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       VIEWPORT TOGGLE BAR
+       Always visible at top. Buttons change the
+       preview wrapper class to constrain app-frame.
+  ============================================ -->
+  <div class="topbar">
+    <span class="topbar__label">Preview</span>
+
+    <button class="vp-btn active" onclick="setVP('desktop',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+      </svg>
+      Desktop
+    </button>
+
+    <button class="vp-btn" onclick="setVP('tablet',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/>
+      </svg>
+      Tablet
+    </button>
+
+    <button class="vp-btn" onclick="setVP('mobile',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="currentColor"/>
+      </svg>
+      Mobile
+    </button>
+
+    <span class="bp-pill" id="bp-pill">1920px</span>
+  </div>
+
+  <!-- ============================================
+       PREVIEW WRAPPER
+       Width constrained by viewport class.
+  ============================================ -->
+  <div class="preview" id="preview">
+    <div class="app-frame">
+
+      <!-- ==========================================
+           AUTH SCREEN
+           Shown on initial load. navigateTo() hides
+           this and shows app-shell.
+      ========================================== -->
+      <div class="auth-screen" id="auth-screen">
+        <div class="auth-card">
+          <div class="auth-brand">
+            <div class="brand-icon">FD</div>
+            <span class="brand-name">FlowDesk</span>
+          </div>
+
+          <!-- Login / Register tab switch -->
+          <div class="auth-tabs">
+            <div class="auth-tab active" onclick="authTab('login',this)">Sign In</div>
+            <div class="auth-tab" onclick="authTab('register',this)">Register</div>
+          </div>
+
+          <!-- Login form -->
+          <div id="auth-login">
+            <div class="field">
+              <label>Email address</label>
+              <input type="email" placeholder="you@company.com">
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input type="password" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;font-size:14px;border-radius:8px;margin-top:4px" onclick="navigateTo('dashboard')">
+              Sign in to FlowDesk
+            </button>
+            <p class="auth-hint">Click Sign In to enter the demo</p>
+          </div>
+
+          <!-- Register form (hidden until tab click) -->
+          <div id="auth-register" style="display:none">
+            <div class="field">
+              <label>Full name</label>
+              <input type="text" placeholder="Jane Smith">
+            </div>
+            <div class="field">
+              <label>Email address</label>
+              <input type="email" placeholder="you@company.com">
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input type="password" placeholder="Min. 8 characters">
+            </div>
+            <div class="field">
+              <label>Confirm password</label>
+              <input type="password" placeholder="••••••••">
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;font-size:14px;border-radius:8px;margin-top:4px" onclick="navigateTo('dashboard')">
+              Create account
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           APP SHELL
+           Sidebar + main content area.
+           Hidden until user "logs in".
+      ========================================== -->
+      <div class="app-shell" id="app-shell">
+
+        <!-- SIDEBAR -->
+        <nav class="sidebar" id="sidebar">
+          <div class="sidebar-logo">
+            <div class="brand-icon" style="width:30px;height:30px;font-size:13px">FD</div>
+            <span class="brand-name" style="color:#fff;font-size:15px">FlowDesk</span>
+          </div>
+
+          <div class="sidebar-section" style="margin-top:8px">Overview</div>
+          <div class="nav-item active" onclick="navigateTo('dashboard')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            Dashboard
+          </div>
+
+          <div class="sidebar-section" style="margin-top:6px">Workspace</div>
+          <div class="nav-item" onclick="navigateTo('projects')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 7a2 2 0 012-2h5l2 2h9a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V7z"/>
+            </svg>
+            Projects
+            <span class="nav-badge">6</span>
+          </div>
+          <div class="nav-item" onclick="navigateTo('taskboard')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="4" height="18" rx="1"/>
+              <rect x="10" y="3" width="4" height="12" rx="1"/>
+              <rect x="17" y="3" width="4" height="15" rx="1"/>
+            </svg>
+            Task Board
+          </div>
+
+          <div class="sidebar-section" style="margin-top:6px">Account</div>
+          <div class="nav-item" onclick="navigateTo('auth')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sign out
+          </div>
+
+          <div class="sidebar-footer">
+            <div class="avatar av-md" style="background:var(--accent)">JD</div>
+            <div>
+              <div class="sidebar-user-name">Jane Doe</div>
+              <div class="sidebar-user-role">Admin</div>
+            </div>
+          </div>
+        </nav>
+
+        <!-- Tap-outside overlay on mobile to close sidebar -->
+        <div class="sidebar-veil" onclick="closeSidebar()"></div>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="main">
+
+          <!-- Top nav bar -->
+          <div class="topnav">
+            <button class="hamburger" onclick="toggleSidebar()" title="Toggle menu">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+            <div class="topnav-title" id="nav-title">Dashboard</div>
+            <div class="topnav-search">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              Search tasks...
+            </div>
+            <span class="role-pill role-admin">Admin</span>
+            <div class="avatar av-md" style="background:var(--accent);cursor:pointer">JD</div>
+          </div>
+
+          <!-- PAGES — only one .active at a time -->
+          <div class="page-wrap">
+
+            <!-- ====== PAGE: DASHBOARD ====== -->
+            <div id="page-dashboard" class="page active">
+              <div class="ph">
+                <div class="ph-row">
+                  <div>
+                    <div class="ph-title">Good morning, Jane</div>
+                    <div class="ph-sub">Here's what's happening across your projects</div>
+                  </div>
+                  <button class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Project
+                  </button>
+                </div>
+              </div>
+
+              <!-- Stat cards -->
+              <div class="stat-grid">
+                <div class="stat-card">
+                  <div class="stat-label">Open Tasks</div>
+                  <div class="stat-value sv-accent">47</div>
+                  <div class="stat-sub">across 6 projects</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">To Do</div>
+                  <div class="stat-value sv-todo">18</div>
+                  <div class="stat-sub">not yet started</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">In Progress</div>
+                  <div class="stat-value sv-progress">21</div>
+                  <div class="stat-sub">actively worked</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">In Review</div>
+                  <div class="stat-value sv-review">8</div>
+                  <div class="stat-sub">awaiting review</div>
+                </div>
+              </div>
+
+              <!-- Priority breakdown + activity feed -->
+              <div class="two-col">
+                <div class="panel">
+                  <div class="panel-title">Open Tasks by Priority — Alpha CRM</div>
+                  <div class="prow">
+                    <span class="dot dot-critical"></span>
+                    <span class="prow-label">Critical</span>
+                    <div class="prow-bar"><div class="prow-fill" style="width:25%;background:var(--p-critical)"></div></div>
+                    <span class="prow-count" style="color:var(--p-critical)">3</span>
+                  </div>
+                  <div class="prow">
+                    <span class="dot dot-high"></span>
+                    <span class="prow-label">High</span>
+                    <div class="prow-bar"><div class="prow-fill" style="width:67%;background:var(--p-high)"></div></div>
+                    <span class="prow-count" style="color:var(--p-high)">8</span>
+                  </div>
+                  <div class="prow">
+                    <span class="dot dot-medium"></span>
+                    <span class="prow-label">Medium</span>
+                    <div class="prow-bar"><div class="prow-fill" style="width:50%;background:var(--p-medium)"></div></div>
+                    <span class="prow-count" style="color:var(--p-medium)">6</span>
+                  </div>
+                  <div class="prow">
+                    <span class="dot dot-low"></span>
+                    <span class="prow-label">Low</span>
+                    <div class="prow-bar"><div class="prow-fill" style="width:17%;background:var(--p-low)"></div></div>
+                    <span class="prow-count" style="color:var(--p-low)">2</span>
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <div class="panel-title">Recent Activity</div>
+                  <div class="activity-item">
+                    <div class="act-dot" style="background:var(--inprogress)"></div>
+                    <div>
+                      <div class="act-text"><strong>Alex M.</strong> moved "API rate limiting" to In Progress</div>
+                      <div class="act-time">2 minutes ago</div>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="act-dot" style="background:var(--done)"></div>
+                    <div>
+                      <div class="act-text"><strong>Sara K.</strong> completed "Database schema design"</div>
+                      <div class="act-time">34 minutes ago</div>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="act-dot" style="background:var(--accent)"></div>
+                    <div>
+                      <div class="act-text"><strong>You</strong> commented on "Auth middleware"</div>
+                      <div class="act-time">1 hour ago</div>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="act-dot" style="background:var(--inreview)"></div>
+                    <div>
+                      <div class="act-text"><strong>Marcus T.</strong> submitted "Payment gateway" for review</div>
+                      <div class="act-time">3 hours ago</div>
+                    </div>
+                  </div>
+                  <div class="activity-item">
+                    <div class="act-dot" style="background:var(--p-high)"></div>
+                    <div>
+                      <div class="act-text"><strong>You</strong> created project "Beta Launch Checklist"</div>
+                      <div class="act-time">Yesterday</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div><!-- /dashboard -->
+
+            <!-- ====== PAGE: PROJECTS ====== -->
+            <div id="page-projects" class="page">
+              <div class="ph">
+                <div class="ph-row">
+                  <div>
+                    <div class="ph-title">Projects</div>
+                    <div class="ph-sub">6 active projects</div>
+                  </div>
+                  <button class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Project
+                  </button>
+                </div>
+              </div>
+              <div class="projects-grid">
+
+                <div class="proj-card" onclick="navigateTo('taskboard')">
+                  <div class="proj-icon" style="background:var(--accent)">A</div>
+                  <div class="proj-name">Alpha CRM</div>
+                  <div class="proj-desc">Customer relationship management platform rebuild. Q2 delivery target.</div>
+                  <div class="proj-footer">
+                    <div class="proj-stats"><span>19 tasks</span><span>4 open</span></div>
+                    <div class="member-stack">
+                      <div class="avatar av-sm" style="background:var(--accent)">JD</div>
+                      <div class="avatar av-sm" style="background:var(--done)">AM</div>
+                      <div class="avatar av-sm" style="background:var(--p-medium)">SK</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="proj-card" onclick="navigateTo('taskboard')">
+                  <div class="proj-icon" style="background:var(--done)">B</div>
+                  <div class="proj-name">Beta Launch Checklist</div>
+                  <div class="proj-desc">Pre-launch validation tasks for the new mobile application.</div>
+                  <div class="proj-footer">
+                    <div class="proj-stats"><span>12 tasks</span><span>7 open</span></div>
+                    <div class="member-stack">
+                      <div class="avatar av-sm" style="background:var(--accent)">JD</div>
+                      <div class="avatar av-sm" style="background:var(--p-high)">MT</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="proj-card" onclick="navigateTo('taskboard')">
+                  <div class="proj-icon" style="background:var(--p-medium)">D</div>
+                  <div class="proj-name">DevOps Infrastructure</div>
+                  <div class="proj-desc">CI/CD pipeline setup, container orchestration, and monitoring stack.</div>
+                  <div class="proj-footer">
+                    <div class="proj-stats"><span>8 tasks</span><span>8 open</span></div>
+                    <div class="member-stack">
+                      <div class="avatar av-sm" style="background:var(--p-critical)">RN</div>
+                      <div class="avatar av-sm" style="background:var(--p-medium)">SK</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="proj-card" onclick="navigateTo('taskboard')">
+                  <div class="proj-icon" style="background:var(--p-high)">P</div>
+                  <div class="proj-name">Payment Gateway</div>
+                  <div class="proj-desc">Stripe integration and billing portal for enterprise subscriptions.</div>
+                  <div class="proj-footer">
+                    <div class="proj-stats"><span>15 tasks</span><span>5 open</span></div>
+                    <div class="member-stack">
+                      <div class="avatar av-sm" style="background:var(--p-high)">MT</div>
+                      <div class="avatar av-sm" style="background:var(--accent)">JD</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="proj-card" onclick="navigateTo('taskboard')">
+                  <div class="proj-icon" style="background:var(--p-critical)">R</div>
+                  <div class="proj-name">Reporting Dashboard</div>
+                  <div class="proj-desc">Analytics and reporting features for internal operations teams.</div>
+                  <div class="proj-footer">
+                    <div class="proj-stats"><span>9 tasks</span><span>9 open</span></div>
+                    <div class="member-stack">
+                      <div class="avatar av-sm" style="background:var(--p-critical)">RN</div>
+                      <div class="avatar av-sm" style="background:var(--done)">AM</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Create new project placeholder -->
+                <div class="proj-card proj-new" onclick="">
+                  <div class="proj-new-inner">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span>Create new project</span>
+                  </div>
+                </div>
+
+              </div>
+            </div><!-- /projects -->
+
+            <!-- ====== PAGE: TASK BOARD (Kanban) ====== -->
+            <div id="page-taskboard" class="page">
+              <div class="ph">
+                <div class="ph-row">
+                  <div>
+                    <div class="ph-title">Alpha CRM — Task Board</div>
+                    <div class="ph-sub">19 tasks · 4 members</div>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <button class="btn btn-ghost btn-sm">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+                      Filter
+                    </button>
+                    <button class="btn btn-primary btn-sm">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Add Task
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="board">
+
+                <!-- TO DO -->
+                <div class="col">
+                  <div class="col-header">
+                    <span class="dot dot-todo"></span>
+                    <span class="col-title">To Do</span>
+                    <span class="col-count">4</span>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-041</span><span class="dot dot-high"></span></div>
+                    <div class="tc-title">Set up OAuth2 provider configuration</div>
+                    <div class="tc-foot">
+                      <span class="tc-due overdue">⏰ Apr 18</span>
+                      <div class="avatar av-xs" style="background:var(--done)">AM</div>
+                    </div>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-038</span><span class="dot dot-medium"></span></div>
+                    <div class="tc-title">Write unit tests for user registration flow</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">Apr 25</span>
+                      <div class="avatar av-xs" style="background:var(--p-medium)">SK</div>
+                    </div>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-035</span><span class="dot dot-low"></span></div>
+                    <div class="tc-title">Update API documentation for v2 endpoints</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">May 1</span>
+                      <div class="avatar av-xs" style="background:var(--accent)">JD</div>
+                    </div>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-033</span><span class="dot dot-critical"></span></div>
+                    <div class="tc-title">Security audit: SQL injection in search handler</div>
+                    <div class="tc-foot">
+                      <span class="tc-due overdue">⏰ Apr 15</span>
+                      <div class="avatar av-xs" style="background:var(--p-critical)">RN</div>
+                    </div>
+                  </div>
+                  <button class="add-col-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add task
+                  </button>
+                </div>
+
+                <!-- IN PROGRESS -->
+                <div class="col">
+                  <div class="col-header">
+                    <span class="dot dot-progress"></span>
+                    <span class="col-title">In Progress</span>
+                    <span class="col-count">5</span>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-040</span><span class="dot dot-high"></span></div>
+                    <div class="tc-title">Implement JWT refresh token rotation</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">Apr 22</span>
+                      <div class="avatar av-xs" style="background:var(--accent)">JD</div>
+                    </div>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-037</span><span class="dot dot-high"></span></div>
+                    <div class="tc-title">API rate limiting middleware</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">Apr 23</span>
+                      <div class="avatar av-xs" style="background:var(--done)">AM</div>
+                    </div>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-034</span><span class="dot dot-medium"></span></div>
+                    <div class="tc-title">Refactor customer import CSV parser</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">Apr 28</span>
+                      <div class="avatar av-xs" style="background:var(--p-medium)">SK</div>
+                    </div>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-031</span><span class="dot dot-medium"></span></div>
+                    <div class="tc-title">Dashboard chart rendering performance</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">May 2</span>
+                      <div class="avatar av-xs" style="background:var(--p-critical)">RN</div>
+                    </div>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-029</span><span class="dot dot-low"></span></div>
+                    <div class="tc-title">Add pagination to contacts list API</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">May 5</span>
+                      <div class="avatar av-xs" style="background:var(--done)">AM</div>
+                    </div>
+                  </div>
+                  <button class="add-col-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add task
+                  </button>
+                </div>
+
+                <!-- IN REVIEW -->
+                <div class="col">
+                  <div class="col-header">
+                    <span class="dot dot-review"></span>
+                    <span class="col-title">In Review</span>
+                    <span class="col-count">3</span>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-039</span><span class="dot dot-high"></span></div>
+                    <div class="tc-title">Email notification service integration</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">Apr 20</span>
+                      <div class="avatar av-xs" style="background:var(--p-high)">MT</div>
+                    </div>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-036</span><span class="dot dot-medium"></span></div>
+                    <div class="tc-title">Customer profile edit permissions</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">Apr 21</span>
+                      <div class="avatar av-xs" style="background:var(--p-medium)">SK</div>
+                    </div>
+                  </div>
+                  <div class="task-card" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-030</span><span class="dot dot-critical"></span></div>
+                    <div class="tc-title">Fix data race in concurrent request handler</div>
+                    <div class="tc-foot">
+                      <span class="tc-due overdue">⏰ Apr 12</span>
+                      <div class="avatar av-xs" style="background:var(--p-critical)">RN</div>
+                    </div>
+                  </div>
+                  <button class="add-col-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add task
+                  </button>
+                </div>
+
+                <!-- DONE -->
+                <div class="col">
+                  <div class="col-header">
+                    <span class="dot dot-done"></span>
+                    <span class="col-title">Done</span>
+                    <span class="col-count">7</span>
+                  </div>
+                  <div class="task-card faded" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-028</span><span class="badge badge-done" style="font-size:10px;padding:2px 7px">Done</span></div>
+                    <div class="tc-title">Database schema design</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">Apr 10</span>
+                      <div class="avatar av-xs" style="background:var(--p-medium)">SK</div>
+                    </div>
+                  </div>
+                  <div class="task-card faded" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-025</span><span class="badge badge-done" style="font-size:10px;padding:2px 7px">Done</span></div>
+                    <div class="tc-title">Set up CI/CD pipeline</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">Apr 8</span>
+                      <div class="avatar av-xs" style="background:var(--p-critical)">RN</div>
+                    </div>
+                  </div>
+                  <div class="task-card faded" onclick="navigateTo('taskdetail')">
+                    <div class="tc-top"><span class="tc-id">FD-022</span><span class="badge badge-done" style="font-size:10px;padding:2px 7px">Done</span></div>
+                    <div class="tc-title">Initial project repository setup</div>
+                    <div class="tc-foot">
+                      <span class="tc-due">Apr 3</span>
+                      <div class="avatar av-xs" style="background:var(--accent)">JD</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div><!-- /taskboard -->
+
+            <!-- ====== PAGE: TASK DETAIL ====== -->
+            <div id="page-taskdetail" class="page">
+              <div class="ph">
+                <div class="ph-row">
+                  <button class="btn btn-ghost btn-sm" onclick="navigateTo('taskboard')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back to Board
+                  </button>
+                  <div style="display:flex;gap:8px">
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-layout">
+                <!-- Main column -->
+                <div>
+                  <div class="detail-id">FD-040 · Alpha CRM</div>
+                  <div class="detail-title">Implement JWT refresh token rotation</div>
+                  <div class="detail-meta">
+                    <span class="badge badge-progress">In Progress</span>
+                    <span class="badge badge-high">High Priority</span>
+                    <span style="font-size:12px;color:var(--text-muted)">Due Apr 22, 2026</span>
+                  </div>
+                  <div class="detail-desc">
+                    Implement a secure JWT refresh token rotation scheme. When a refresh token is used, it should be invalidated and a new one issued atomically. Expired or revoked refresh tokens must return 401. Store refresh tokens in the database with a hash and expiry timestamp.<br><br>
+                    <strong>Acceptance criteria:</strong> refresh endpoint returns a new access + refresh token pair, old token is invalidated after use, concurrent refresh attempts are handled gracefully without race conditions, and all token operations are covered by unit tests.
+                  </div>
+
+                  <!-- Comments -->
+                  <div>
+                    <div class="comments-title">
+                      Comments
+                      <span class="comments-count">3 comments</span>
+                    </div>
+
+                    <div class="comment">
+                      <div class="avatar av-md" style="background:var(--done);flex-shrink:0">AM</div>
+                      <div class="comment-body">
+                        <div class="comment-header">
+                          <span class="comment-author">Alex M.</span>
+                          <span class="comment-time">Apr 19 at 2:14 PM</span>
+                        </div>
+                        <div class="comment-text">I've started the implementation. Planning to use a sliding window approach — each refresh generates a new token and invalidates the old one. Will use a DB table with hash + expiry. Should be done by tomorrow EOD.</div>
+                      </div>
+                    </div>
+
+                    <div class="comment">
+                      <div class="avatar av-md" style="background:var(--accent);flex-shrink:0">JD</div>
+                      <div class="comment-body">
+                        <div class="comment-header">
+                          <span class="comment-author">Jane Doe (you)</span>
+                          <span class="comment-time">Apr 19 at 3:42 PM</span>
+                        </div>
+                        <div class="comment-text">Sounds good. Make sure the rotation is atomic — we had a race condition in the old system where two requests could both use the same token before either was invalidated. Wrap in a DB transaction with a unique constraint on the token hash.</div>
+                      </div>
+                    </div>
+
+                    <div class="comment">
+                      <div class="avatar av-md" style="background:var(--done);flex-shrink:0">AM</div>
+                      <div class="comment-body">
+                        <div class="comment-header">
+                          <span class="comment-author">Alex M.</span>
+                          <span class="comment-time">Apr 19 at 4:01 PM</span>
+                        </div>
+                        <div class="comment-text">Good call. I'll add a unique index on token_hash and use SELECT FOR UPDATE within the transaction to prevent the race. Will add a specific integration test for the concurrent scenario too.</div>
+                      </div>
+                    </div>
+
+                    <div class="comment-input-row">
+                      <div class="avatar av-md" style="background:var(--accent);flex-shrink:0">JD</div>
+                      <textarea class="comment-input" placeholder="Add a comment…"></textarea>
+                    </div>
+                    <div class="comment-submit-row">
+                      <button class="btn btn-primary btn-sm">Post comment</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sidebar metadata -->
+                <div>
+                  <div class="meta-panel">
+                    <div class="meta-panel-title">Details</div>
+                    <div class="meta-row">
+                      <span class="meta-key">Status</span>
+                      <span class="meta-val"><span class="badge badge-progress">In Progress</span></span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-key">Priority</span>
+                      <span class="meta-val"><span class="dot dot-high"></span> High</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-key">Assignee</span>
+                      <span class="meta-val">
+                        <div class="avatar av-xs" style="background:var(--done)">AM</div>
+                        Alex M.
+                      </span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-key">Due date</span>
+                      <span class="meta-val">Apr 22, 2026</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-key">Project</span>
+                      <span class="meta-val" style="color:var(--accent)">Alpha CRM</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-key">Created by</span>
+                      <span class="meta-val">Jane Doe</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-key">Created</span>
+                      <span class="meta-val">Apr 15, 2026</span>
+                    </div>
+                  </div>
+
+                  <div class="meta-panel">
+                    <div class="meta-panel-title">Activity Log</div>
+                    <div style="font-size:12px;color:var(--text-muted);line-height:2">
+                      <div><strong style="color:var(--text)">Alex M.</strong> moved to In Progress <span style="float:right">Apr 19</span></div>
+                      <div><strong style="color:var(--text)">Jane Doe</strong> assigned to Alex M. <span style="float:right">Apr 18</span></div>
+                      <div><strong style="color:var(--text)">Jane Doe</strong> created task <span style="float:right">Apr 15</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div><!-- /taskdetail -->
+
+          </div><!-- /page-wrap -->
+        </div><!-- /main -->
+      </div><!-- /app-shell -->
+
+    </div><!-- /app-frame -->
+  </div><!-- /preview -->
+
+  <script>
+    /* ============================================
+       NAVIGATION
+       pageMap: page id, which nav item is active,
+       and the topnav title for each route.
+    ============================================ */
+    const pageMap = {
+      dashboard:  { id: 'page-dashboard',  nav: 0, title: 'Dashboard' },
+      projects:   { id: 'page-projects',   nav: 1, title: 'Projects' },
+      taskboard:  { id: 'page-taskboard',  nav: 2, title: 'Task Board — Alpha CRM' },
+      taskdetail: { id: 'page-taskdetail', nav: 2, title: 'FD-040 · Implement JWT refresh token rotation' },
+    };
+
+    function navigateTo(name) {
+      if (name === 'auth') {
+        document.getElementById('app-shell').classList.remove('visible');
+        document.getElementById('auth-screen').style.display = 'flex';
+        return;
+      }
+
+      // Show app shell, hide auth screen
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app-shell').classList.add('visible');
+
+      // Deactivate all pages
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+      const cfg = pageMap[name];
+      if (!cfg) return;
+
+      document.getElementById(cfg.id).classList.add('active');
+      document.getElementById('nav-title').textContent = cfg.title;
+
+      // Update sidebar active states
+      document.querySelectorAll('.nav-item').forEach((el, i) => {
+        el.classList.toggle('active', i === cfg.nav);
+      });
+
+      closeSidebar();
+    }
+
+    /* ============================================
+       AUTH TAB SWITCHING
+    ============================================ */
+    function authTab(tab, el) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('auth-login').style.display    = tab === 'login'    ? 'block' : 'none';
+      document.getElementById('auth-register').style.display = tab === 'register' ? 'block' : 'none';
+    }
+
+    /* ============================================
+       VIEWPORT TOGGLE
+       Swaps class on .preview to constrain
+       app-frame width for desktop/tablet/mobile.
+    ============================================ */
+    const vpLabels = { desktop: '1920px', tablet: '768px', mobile: '375px' };
+
+    function setVP(name, btn) {
+      const preview = document.getElementById('preview');
+      preview.className = 'preview vp-' + name;
+      document.getElementById('bp-pill').textContent = vpLabels[name];
+      document.querySelectorAll('.vp-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (name !== 'mobile') closeSidebar();
+    }
+
+    /* ============================================
+       SIDEBAR TOGGLE (mobile)
+    ============================================ */
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+    }
+  </script>
+
+</body>
+</html>
